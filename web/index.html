@@ -1,0 +1,164 @@
+<!doctype html>
+<html lang="th">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>DocVault — คลังเอกสารส่วนตัว</title>
+    <link rel="stylesheet" href="css/styles.css" />
+  </head>
+  <body>
+    <!-- ===== Auth view (login / register) ===== -->
+    <main id="authView" class="auth-shell">
+      <div class="auth-card">
+        <div class="auth-card__header">
+          <h1 id="authTitle">DocVault</h1>
+          <p id="authSubtitle">เข้าสู่ระบบเพื่อจัดการเอกสารส่วนตัวของคุณ</p>
+        </div>
+
+        <form id="authForm" class="stack">
+          <div id="nameField" class="field" hidden>
+            <label for="nameInput">ชื่อ (ไม่บังคับ)</label>
+            <input id="nameInput" name="name" type="text" autocomplete="name" />
+          </div>
+          <div class="field">
+            <label for="emailInput">อีเมล</label>
+            <input id="emailInput" name="email" type="email" required autocomplete="email" />
+          </div>
+          <div class="field">
+            <label for="passwordInput">รหัสผ่าน</label>
+            <input
+              id="passwordInput"
+              name="password"
+              type="password"
+              required
+              autocomplete="current-password"
+            />
+            <p id="passwordHint" class="hint" hidden>อย่างน้อย 8 ตัวอักษร</p>
+          </div>
+
+          <p id="authError" class="error-box" hidden></p>
+
+          <button type="submit" id="authSubmit" class="btn btn--primary btn--block">
+            เข้าสู่ระบบ
+          </button>
+        </form>
+
+        <p class="auth-switch">
+          <span id="authSwitchText">ยังไม่มีบัญชี?</span>
+          <a href="#" id="authSwitchLink">สมัครสมาชิก</a>
+        </p>
+
+        <p class="setup-note">
+          ยังไม่ได้ตั้งค่าเซิร์ฟเวอร์? ดู <code>gas-backend/SETUP.md</code> แล้วแก้ไข
+          <code>API_URL</code> ใน <code>web/js/config.js</code>
+        </p>
+      </div>
+    </main>
+
+    <!-- ===== Dashboard view ===== -->
+    <div id="dashboardView" class="app-shell" hidden>
+      <header class="topbar">
+        <div class="topbar__brand">🗂️ <span>DocVault</span></div>
+        <div class="topbar__user">
+          <span id="userLabel"></span>
+          <button id="logoutBtn" class="btn btn--ghost">ออกจากระบบ</button>
+        </div>
+      </header>
+
+      <div class="layout">
+        <aside class="sidebar">
+          <nav id="categoryNav" class="category-nav"></nav>
+          <div class="sidebar__footer">
+            <form id="categoryForm" class="stack" hidden>
+              <input id="categoryNameInput" type="text" placeholder="ชื่อหมวดหมู่" />
+              <div id="colorSwatches" class="color-swatches"></div>
+              <div class="row-gap">
+                <button type="submit" class="btn btn--primary btn--sm">เพิ่ม</button>
+                <button type="button" id="cancelCategoryBtn" class="btn btn--text btn--sm">
+                  ยกเลิก
+                </button>
+              </div>
+            </form>
+            <button id="showCategoryFormBtn" class="btn btn--dashed btn--block">
+              + เพิ่มหมวดหมู่
+            </button>
+          </div>
+        </aside>
+
+        <main class="content">
+          <div class="toolbar">
+            <div class="search-box">
+              <span class="search-box__icon">🔍</span>
+              <input id="searchInput" type="text" placeholder="ค้นหาชื่อเอกสาร หรือข้อความในเอกสาร..." />
+            </div>
+            <button id="openUploadBtn" class="btn btn--primary">+ เพิ่มเอกสาร</button>
+          </div>
+
+          <p id="loadingLabel" class="muted-center" hidden>กำลังโหลด...</p>
+          <div id="emptyState" class="empty-state" hidden>
+            <span class="empty-state__icon">📭</span>
+            <p id="emptyStateText"></p>
+          </div>
+          <div id="documentGrid" class="document-grid"></div>
+        </main>
+      </div>
+    </div>
+
+    <!-- ===== Upload modal ===== -->
+    <div id="uploadModal" class="modal-backdrop" hidden>
+      <div class="modal">
+        <div class="modal__header">
+          <h2>เพิ่มเอกสารใหม่</h2>
+          <button id="closeUploadBtn" class="icon-btn">✕</button>
+        </div>
+
+        <form id="uploadForm" class="stack">
+          <label id="dropZone" class="drop-zone">
+            <img id="filePreviewImg" hidden alt="ตัวอย่างเอกสาร" />
+            <span id="dropZoneIcon" class="drop-zone__icon">📷</span>
+            <span id="dropZoneText">แตะเพื่อสแกน/ถ่ายภาพ หรือเลือกไฟล์</span>
+            <span class="hint">รองรับ JPG, PNG, WEBP, HEIC, PDF (ไม่เกิน 8MB)</span>
+            <input
+              id="fileInput"
+              type="file"
+              accept="image/jpeg,image/png,image/webp,image/heic,image/heif,application/pdf"
+              capture="environment"
+              hidden
+            />
+          </label>
+
+          <div class="field">
+            <label for="uploadTitleInput">ชื่อเอกสาร (ไม่บังคับ)</label>
+            <input
+              id="uploadTitleInput"
+              type="text"
+              placeholder="ถ้าไม่ระบุ ระบบจะสแกนและตั้งชื่อให้อัตโนมัติ"
+            />
+          </div>
+
+          <div class="field">
+            <label for="uploadCategorySelect">หมวดหมู่ (ไม่บังคับ)</label>
+            <select id="uploadCategorySelect">
+              <option value="">ไม่มีหมวดหมู่</option>
+            </select>
+          </div>
+
+          <p id="uploadError" class="error-box" hidden></p>
+
+          <div class="row-gap">
+            <button type="button" id="cancelUploadBtn" class="btn btn--outline btn--flex">
+              ยกเลิก
+            </button>
+            <button type="submit" id="submitUploadBtn" class="btn btn--primary btn--flex">
+              อัปโหลด
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <script src="js/config.js"></script>
+    <script src="js/api.js"></script>
+    <script src="js/app.js"></script>
+  </body>
+</html>

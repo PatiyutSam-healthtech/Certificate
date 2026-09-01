@@ -15,6 +15,10 @@ const eslintConfig = defineConfig([
     // Standalone Node script invoked via child_process, not bundled by
     // Next.js — plain CommonJS on purpose.
     "scripts/**",
+    // Separate static site (plain <script> tags, browser globals) and its
+    // Google Apps Script backend — not part of the Next.js app.
+    "web/**",
+    "gas-backend/**",
   ]),
 ]);
 
